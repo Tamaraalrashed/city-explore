@@ -16,12 +16,6 @@ server.listen(PORT,() =>{
      res.send('HERE WE GO');
  });
 
-
-server.get('/', (req,res)=>{
-    res.send('https://codefellows.github.io/code-301-guide/curriculum/city-explorer-app/front-end/')
-})
-
-
 server.get('/location', (req,res)=>{
 let getData= require('./data/location.json');
 let getLocation =new Location(getData);
