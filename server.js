@@ -66,11 +66,6 @@ function Weather (weatherData) {
 
 
 server.get('*',(req,res)=>{
-    // {
-    //     status: 500,
-    //     responseText: "Sorry, something went wrong",
-    //     ...
-    //   }
     let errorObj = {
         status: 500,
         responseText: "Sorry, something went wrong"
