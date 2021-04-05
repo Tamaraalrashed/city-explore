@@ -42,6 +42,18 @@ Finish time: 4:15 pm
 
 Actual time needed to complete: 5 min
 ```
+
+```Number and name of feature:  Parks
+
+Estimate of time needed to complete: 3 hours
+
+Start time: 4:30 pm
+
+Finish time: 8:30 pm 
+
+Actual time needed to complete: 4 hours
+```
+
 <br>
 
 ### **Author**: Tamara Alrashed <br>
