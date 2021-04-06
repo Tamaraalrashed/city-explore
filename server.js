@@ -8,10 +8,14 @@ const express=require('express');
 const cors = require('cors');
 // client-side HTTP request library
 const superagent=require('superagent')
+//
+const pg=require('pg');
 
 // Application Setup
 const app=express();
 const PORT=process.env.PORT || 4000;
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL});
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
 app.use(cors());
 
 
@@ -29,18 +33,48 @@ res.status(200).send('Good to reach here!!!')
 function locationHandler (req,res){
     console.log(req.query);
     let cityName=req.query.city;
-    console.log(cityName);
-    let key=process.env.KEY_LOCATION;
-    let URL=`https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`
-    // console.log('before superagent');
-    superagent.get(URL)
-    .then(getData=>{
-        // console.log('inside superagent'); 
-        let gData=getData.body;
-        let getLocation =new Location(cityName, gData);
+    console.log(cityName); 
+let SQL=`SELECT DISTINCT * FROM locations WHERE search_query=$1`
+let safeValues=[cityName];
+client.query(SQL,safeValues)
+.then(dataBaseData=>{
+    console.log(dataBaseData);
+    if(dataBaseData.rowCount>0){
+        let dbData=dataBaseData.rows[0];
+        console.log('hereh :', dbData)
+        let getLocation =new Location(cityName, dbData);
         res.send(getLocation);
-    })
+    }
+    else{
+        let key=process.env.KEY_LOCATION;
+        let URL=`https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`
+        // console.log('before superagent');
+        superagent.get(URL)
+        .then(getData=>{
+            // console.log('inside superagent'); 
+            let gData=getData.body;
+            
+            let SQL1=  `INSERT INTO locations VALUES($1,$2,$3,$4) RETURNING *;`
+let safeValues1=[cityName, gData[0].display_name, gData[0].lat, gData[0].lon];
+client.query(SQL1,safeValues1)
+.then( locationDB=>{
+    console.log('fffff');
+    let locationDB1 =new Location(locationDB.rows[0].search_query,locationDB.rows[0]); 
+    res.send(locationDB1);
+})
+
+ })
+    
+    }
+});
+
 }
+//   let firstName= req.query.first;
+// let lastName= req.query.last;
+// let SQL = `INSERT INTO people (firstName,lastName) VALUES ($1,$2) RETURNING *;`;
+// let safeValues = [firstName,lastName];
+// client.query(SQL,safeValues)
+
 // console.log('after superagent'); 
 
 //http://localhost:3000/weather?search_query=amman&formatted_query=Amman%2C%2011181%2C%20Jordan&latitude=31.9515694&longitude=35.9239625&page=1
@@ -93,9 +127,9 @@ function parksHandler(req,res){
 //constructors
 function Location (cityName,locationData) {
     this.search_query = cityName ;
-    this.formatted_query=locationData[0].display_name;
-    this.latitude=locationData[0].lat;
-    this.longitude=locationData[0].lon;
+    this.formatted_query=locationData.formatted_query;
+    this.latitude=locationData.latitude;
+    this.longitude=locationData.longitude;
 
 }
 
@@ -150,7 +184,13 @@ app.get('*',(req,res)=>{
     }
     res.status(500).send(errorObj);
 })
-app.listen(PORT,() =>{
-    console.log(`hello PORT ${PORT}`)
-});
+
+client.connect()
+.then(()=>{
+    app.listen(PORT,() =>{
+        console.log(`hello PORT ${PORT}`)
+    });
+})
+
+
 
