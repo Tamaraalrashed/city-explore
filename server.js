@@ -11,14 +11,11 @@ const superagent=require('superagent')
 //
 const pg=require('pg');
 
-
-const axios = require('axios');
-
 // Application Setup
 const app=express();
 const PORT=process.env.PORT || 4000;
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL});
-// const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL});
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
 app.use(cors());
 
 
@@ -139,7 +136,7 @@ return getMovies;
 
  function yelpHandler (req,res){
     let cityName=req.query.search_query;
-    // console.log('yelpquery', req.query);   
+    console.log('yelpquery', req.query);   
     let key=process.env.KEY_YELP;
     // let authorization=`Bearer ${key}`;
     // let URL=`https://api.yelp.com/v3/businesses/search?location=${cityName}`
@@ -157,8 +154,10 @@ return getMovies;
     //     },
     // })
     let numberInPage=5;
-    // let URL=`https://api.yelp.com/v3/businesses/search?location=${cityName}&limit=${numberInPage}&offset=${start}`;
-    let URL=`https://api.yelp.com/v3/businesses/search?location=${cityName}`;
+    let page=req.query.page;
+const start=((page-1)* numberInPage +1);
+    let URL=`https://api.yelp.com/v3/businesses/search?location=${cityName}&limit=${numberInPage}&offset=${start}`;
+  
   superagent.get(URL)
     .set('Authorization', `Bearer ${key}`)
     .then(yelpData=>{
